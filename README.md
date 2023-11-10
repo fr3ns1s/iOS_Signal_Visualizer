@@ -1,5 +1,5 @@
 # iOS Signal DB Visualizer
-The db parser will generate a datamodel compatible with the fronted.  
+The db parser will generate a datamodel compatible with the frontend.  
 Inside the chat you can play videos/audios, see images/stickers, open documents ecc.. (**group container is mandatory**)  
 
 ## How to install
@@ -25,7 +25,7 @@ pip3 install -r requirements.txt
 5. Enjoy!
 
 
-**The fronted is an edited version of this:** https://github.com/anishghosh103/whatsapp   
+**The frontend is an edited version of this:** https://github.com/anishghosh103/whatsapp   
 <p>&nbsp;</p>  
   
 ![Screenshot](https://github.com/fr3ns1s/iOS_Signal_Visualizer/blob/main/screenshot.png )

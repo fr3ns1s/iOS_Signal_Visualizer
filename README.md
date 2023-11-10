@@ -1,5 +1,6 @@
 # iOS Signal DB Visualizer
-
+The db parser will generate a datamodel compatible with the fronted.  
+Inside the chat you can play videos/audios, see images/stickers, open documents ecc.. (**group container is mandatory**)  
 
 ## How to install
 
@@ -7,7 +8,7 @@ The `requirements.txt` file should list all Python libraries that your notebooks
 
 ```
 pip3 install -r requirements.txt
-```
+```  
 
 ## How to use
 1. Extract Signal app container from your iPhone/backup 
@@ -24,11 +25,7 @@ pip3 install -r requirements.txt
 5. Enjoy!
 
 
-**The fronted is an edited version of this:**
-https://github.com/anishghosh103/whatsapp
-
-```
-![Alt text](file://screenshot.png "a title")
-```
-
-
+**The fronted is an edited version of this:** https://github.com/anishghosh103/whatsapp   
+<p>&nbsp;</p>  
+  
+![Screenshot](https://github.com/fr3ns1s/iOS_Signal_Visualizer/blob/main/screenshot.png )

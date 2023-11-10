@@ -123,22 +123,24 @@ def get_call_detail(InteractionRowId, threadRowId):
 def get_attachment_detail(row):
     try:
         q = ""
-        dict = NSKeyedUnArchiver.unserializeNSKeyedArchiver(row['attachmentIds'])
-        if len(dict) > 0:
-            q = "select * from model_TSAttachment where uniqueId == '{}'".format(dict[0])
-        elif len(dict) == 0 and row['messageSticker'] is not None:
-            dict = NSKeyedUnArchiver.unserializeNSKeyedArchiver(row['messageSticker'])
-            q = "select * from model_TSAttachment where uniqueId == '{}'".format(dict['attachmentId'])
+        arr_att = NSKeyedUnArchiver.unserializeNSKeyedArchiver(row['attachmentIds'])
+        if len(arr_att) > 1:
+            q = "select * from model_TSAttachment where uniqueId IN {}".format(tuple(arr_att))
+        elif len(arr_att)  == 1:
+            q = "select * from model_TSAttachment where uniqueId = '{}'".format(arr_att[0])
+        elif len(arr_att) == 0 and row['messageSticker'] is not None:
+            arr_att = NSKeyedUnArchiver.unserializeNSKeyedArchiver(row['messageSticker'])
+            q = "select * from model_TSAttachment where uniqueId = '{}'".format(arr_att['attachmentId'])
         cursor.execute(q)
-        attachment = cursor.fetchone()
-        if attachment:
-            file_path = container_path + "/Attachments" + attachment['localRelativeFilePath']
-            return {'contentType': attachment['contentType'], 'path': file_path}
-        else:
-            return None
+        attachments = cursor.fetchall()
+        res = []
+        for attachment in attachments:
+                file_path = container_path + "/Attachments" + attachment['localRelativeFilePath']
+                res.append({'contentType': attachment['contentType'], 'path': file_path})
+        return res
     except sqlite3.Error as error:
         print("Error on parsing attachment detail", error)
-        return None
+        return []
 
 
 def get_group_list_and_messages():
@@ -156,13 +158,11 @@ def get_group_list_and_messages():
 
 def make_message_dict(row, thid, isGroup, contactUUID):
     dict = {}
+    attachments = []
     dict['type'] = 'Text'
     dict['body'] = row['body'] if row['body'] is not None else ""
     if row['attachmentIds'] is not None or row['messageSticker'] is not None:
-        attachment = get_attachment_detail(row)
-        if attachment is not None:
-            dict['type'] = 'Attachment'
-            dict.update(attachment)
+        attachments = get_attachment_detail(row)
     else:
         call = get_call_detail(row['Id'], thid)
         if call is not None:
@@ -177,10 +177,22 @@ def make_message_dict(row, thid, isGroup, contactUUID):
                'sender': row['authorUUID'] if row['authorUUID'] is not None else my_contact['id'],
                'recvId': recvId,
                'status': 2 if row['read'] == 1 else 1, 'time': row['timestamp'], 'recvIsGroup': isGroup}
+
     for key in dict.keys():
         message[key] = dict[key]
 
-    return message
+    if len(attachments) == 0:
+        if message['body'] == "" and message['type'] == "Text":
+            return
+        else:
+            messageList.append(message)
+    else:
+        for attachment in attachments:
+            message['type'] = 'Attachment'
+            message.update(attachment)
+            if message['body'] == "" and message['type'] == "Text":
+                continue
+            messageList.append(message)
 
 
 def get_message_list_group(groupId):
@@ -189,10 +201,7 @@ def get_message_list_group(groupId):
     cursor.execute(sqlite_select_Query)
     messages = cursor.fetchall()
     for row in messages:
-        message = make_message_dict(row, groupId, True, None)
-        if message['body'] == "" and message['type'] == "Text":
-            continue
-        messageList.append(message)
+        make_message_dict(row, groupId, True, None)
 
 
 def get_message_list_chat():
@@ -206,10 +215,7 @@ def get_message_list_chat():
         cursor.execute(q)
         messages = cursor.fetchall()
         for row in messages:
-            message = make_message_dict(row, row_chat['Id'], False, row_chat['contactUUID'])
-            if message['body'] == "" and message['type'] == "Text":
-                continue
-            messageList.append(message)
+            make_message_dict(row, row_chat['Id'], False, row_chat['contactUUID'])
 
 
 def main(db_path, group_path):
